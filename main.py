@@ -10,16 +10,16 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QFileDialog, QMessageBox
                              QLabel, QComboBox, QRadioButton, QCheckBox, QPushButton,
                              QTableWidget, QTableWidgetItem, QHeaderView, QColorDialog)
 from PyQt6 import QtWidgets
-from midterm import MainWindow
+from regression import MainWindow
 
 
-class HeartDataAnalyzer(QMainWindow):
+class DataAnalyzer(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
         
     def initUI(self):
-        self.setWindowTitle('Heart Data Analyzer')
+        self.setWindowTitle('Data Analyzer')
         self.setWindowIcon(QIcon('icon.png'))
         self.setGeometry(100, 100, 1200, 600)
         
@@ -38,7 +38,7 @@ class HeartDataAnalyzer(QMainWindow):
         # exit button
         self.exit_button = QPushButton('Exit', self)
         self.exit_button.setGeometry(20, 530, 120, 30)
-        self.exit_button.clicked.connect(self.close)
+        self.exit_button.clicked.connect(self.exit)
         
         # clear button
         self.clear_button = QPushButton('Clear', self)
@@ -51,11 +51,10 @@ class HeartDataAnalyzer(QMainWindow):
         self.color_button.clicked.connect(self.change_color)
         
         # Second part of the GUI
-        midterm = QPushButton("Open Second Window", self)
-        midterm.setGeometry(20, 130, 120, 30)
+        midterm = QPushButton("Regression", self)
+        midterm.setGeometry(20, 130, 160, 30)
         midterm.clicked.connect(self.open_second_window)
 
-        
         
         self.analyze_button = QPushButton('Analyze Data', self)
         self.analyze_button.setGeometry(20, 90, 120, 30)
@@ -63,11 +62,11 @@ class HeartDataAnalyzer(QMainWindow):
         self.analyze_button.clicked.connect(self.analyze_data)
         
         self.method_label = QLabel('Select analysis method:', self)
-        self.method_label.setGeometry(20, 140, 200, 20)
+        self.method_label.setGeometry(20, 170, 200, 20)
         self.method_label.setFont(font)
         
         self.method_combo = QComboBox(self)
-        self.method_combo.setGeometry(20, 170, 250, 30)
+        self.method_combo.setGeometry(20, 200, 250, 30)
         self.method_combo.addItems(['1. Classify columns', '2. Histograms', '3. Contingency tables',
                                     '4. Q-Q plots', '5. Boxplots', '6. Scatterplots'])
         self.method_combo.setEnabled(False)
@@ -81,13 +80,13 @@ class HeartDataAnalyzer(QMainWindow):
 
         self.result_table.setColumnCount(2)
         self.result_table.setHorizontalHeaderLabels(['Variable', 'Type/Result'])
-        
         self.show()
         
-
+    # displaying second window 
     def open_second_window(self):
         self.second_window = MainWindow()
         self.second_window.show()
+        self.close()
         
         
     # color changer function
@@ -105,8 +104,8 @@ class HeartDataAnalyzer(QMainWindow):
         self.analyze_button.setEnabled(False)
         self.method_combo.setEnabled(False)
         
-    # close button function
-    def close(self):
+    #close button function
+    def exit(self):
         close = QMessageBox.question(self, 'Exit', 'Are you sure you want to exit?', QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if close == QMessageBox.StandardButton.Yes:
             sys.exit()
@@ -339,11 +338,10 @@ class HeartDataAnalyzer(QMainWindow):
                     self.result_table.setItem(self.result_table.rowCount()-1, 2, QTableWidgetItem('Moderate negative correlation'))
                 else:
                     self.result_table.setItem(self.result_table.rowCount()-1, 2, QTableWidgetItem('Strong negative correlation'))
-                
-                
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = HeartDataAnalyzer()
+    window = DataAnalyzer()
     window.show()
     sys.exit(app.exec())
 
