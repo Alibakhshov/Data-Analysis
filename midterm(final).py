@@ -13,13 +13,13 @@ from PyQt6 import QtWidgets
 
 
 
-class HeartDataAnalyzer(QMainWindow):
+class DataAnalyzer(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
         
     def initUI(self):
-        self.setWindowTitle('Heart Data Analyzer')
+        self.setWindowTitle('Data Analyzer')
         self.setWindowIcon(QIcon('icon.png'))
         self.setGeometry(100, 100, 1200, 600)
         
@@ -405,7 +405,7 @@ class MainWindow(QMainWindow):
         
     # back function
     def back(self):
-        self.main = HeartDataAnalyzer()
+        self.main = DataAnalyzer()
         self.main.show()
         self.close()
 
@@ -563,7 +563,7 @@ class MainWindow(QMainWindow):
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = HeartDataAnalyzer()
+    window = DataAnalyzer()
     window.show()
     sys.exit(app.exec())
 
