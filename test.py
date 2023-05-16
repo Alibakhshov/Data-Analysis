@@ -6,6 +6,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 import numpy as np
+import  os
 
 # Set the matplotlib backend to Agg
 plt.switch_backend('agg')
@@ -20,17 +21,49 @@ df = pd.read_csv(dataset_path)
 # Create a linear regression model
 regression_model = LinearRegression()
 
-# Create a scatterplot function
-def draw_scatterplot(feature):  
-    fig = plt.figure()
-    canvas = FigureCanvas(fig)
-    ax = fig.gca()
-    sns.scatterplot(x=df[feature], y=df['SalePrice'], ax=ax)
-    ax.set_xlabel(feature)
-    ax.set_ylabel('SalePrice')
-    ax.set_title(f'{feature} vs. SalePrice')
-    canvas.draw()
-    fig.savefig('scatterplot.png', dpi=150, bbox_inches='tight')  # Save the scatterplot as an image file
+# Function to provide help information about available commands
+def show_help():
+    help_text = "Available commands:\n\n" \
+                "/start - Start the bot\n" \
+                "/squaredr - Get the squared R values\n" \
+                "/residuals - Get the scatterplot of residuals\n" \
+                "/report - Generate a model report\n" \
+                "/removeoutliers - Identify and remove outliers, and generate reports without outliers\n" \
+                "/scatterplot - Get the scatterplot of a feature\n" \
+                "/bestfeature - Get the best feature\n" \
+                "/help - Show available commands"
+    return help_text
+
+
+# # Create a scatterplot function
+# def draw_scatterplot(feature):  
+#     fig = plt.figure()
+#     canvas = FigureCanvas(fig)
+#     ax = fig.gca()
+#     sns.scatterplot(x=df[feature], y=df['SalePrice'], ax=ax)
+#     ax.set_xlabel(feature)
+#     ax.set_ylabel('SalePrice')
+#     ax.set_title(f'{feature} vs. SalePrice')
+#     canvas.draw()
+#     fig.savefig('scatterplot.png', dpi=150, bbox_inches='tight')  # Save the scatterplot as an image file
+
+# Function to draw scatterplots for each column and return image paths
+def draw_scatterplots():
+    features = ['LotArea', 'OverallQual', 'YearBuilt']
+    target = 'SalePrice'
+    scatterplot_paths = []
+
+    for feature in features:
+        plt.figure()
+        sns.scatterplot(data=df, x=feature, y=target)
+        plt.xlabel(feature)
+        plt.ylabel(target)
+        plt.title(f'Scatterplot: {feature} vs. {target}')
+        scatterplot_path = f'{feature}_scatterplot.png'
+        plt.savefig(scatterplot_path, dpi=150, bbox_inches='tight')
+        scatterplot_paths.append(scatterplot_path)
+
+    return scatterplot_paths
 
 
 # Function to draw scatterplot of residuals
@@ -120,6 +153,12 @@ def detect_outliers(data):
     z_scores = (data - np.mean(data)) / np.std(data)
     outliers_indices = np.where(np.abs(z_scores) > 3)[0]
     return outliers_indices
+
+# Function to determine the feature with the best squared R value
+def get_best_feature():
+    best_feature = max(r2_scores, key=r2_scores.get)
+    return best_feature, r2_scores[best_feature]
+
     
 # Create a linear regression model for each numerical feature
 regression_models = {
@@ -139,6 +178,16 @@ for feature, model in regression_models.items():
 
 # Create the Telegram bot
 bot = telebot.TeleBot(TOKEN)
+
+# Handle the /help command
+@bot.message_handler(commands=['help'])
+def send_help(message):
+    try:
+        help_text = show_help()
+        bot.reply_to(message, help_text)
+    except Exception as e:
+        bot.reply_to(message, f"An error occurred: {str(e)}")
+
 
 # Handle the /squaredr command
 @bot.message_handler(commands=['squaredr'])
@@ -178,8 +227,14 @@ def send_model_report(message):
 @bot.message_handler(commands=['scatterplot'])
 def send_scatterplot(message):
     try:
-        draw_scatterplot(feature='LotArea')
-        bot.send_photo(message.chat.id, open('scatterplot.png', 'rb'))
+        # Assuming you have loaded your data into a DataFrame named 'df'
+        scatterplot_paths = draw_scatterplots()
+
+        # Send scatterplot images
+        for path in scatterplot_paths:
+            bot.send_photo(message.chat.id, open(path, 'rb'))
+            os.remove(path)  # Remove the image file after sending
+
     except Exception as e:
         bot.reply_to(message, f"An error occurred: {str(e)}")
 
@@ -196,6 +251,17 @@ def send_reports_without_outliers(message):
         bot.reply_to(message, report)
     except Exception as e:
         bot.reply_to(message, f"An error occurred: {str(e)}")
+        
+# Handle the /bestfeature command
+@bot.message_handler(commands=['bestfeature'])
+def send_best_feature(message):
+    try:
+        best_feature, best_r2 = get_best_feature()
+        bot.reply_to(message, f"The feature with the best squared R is {best_feature}.")
+        bot.reply_to(message, f"Squared R value: {best_r2}")
+    except Exception as e:
+        bot.reply_to(message, f"An error occurred: {str(e)}")
+
 
 
 # Handle any other text message
