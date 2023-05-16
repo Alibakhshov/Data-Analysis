@@ -13,7 +13,7 @@ import  os
 plt.switch_backend('agg')
 
 # Telegram Bot Token
-TOKEN = '5806370469:AAGNIWuqXcCgBInVQSPdJMJch0CuRXPJaiQ'
+TOKEN = '5991336238:AAGy5MwINICtj5QGbkEINL-HmMnKkc4kBGQ'
 
 # Load the dataset
 dataset_path = 'house_prices_small.csv'
@@ -108,9 +108,6 @@ def draw_residual_plots(df):
         plt.savefig(f'{feature}_residuals.png')  # Save the scatterplot as an image file
 
     plt.close('all')  # Close all figures to free up resources
-
-
-
 
 
 # Function to generate a report for the regression model
