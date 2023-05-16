@@ -1,3 +1,4 @@
+import glob
 import telebot
 import pandas as pd
 import seaborn as sns
@@ -26,7 +27,7 @@ def show_help():
     help_text = "Available commands:\n\n" \
                 "/start - Start the bot\n" \
                 "/squaredr - Get the squared R values\n" \
-                "/residuals - Get the scatterplot of residuals\n" \
+                "/residualplots - Get the scatterplot of residuals\n" \
                 "/report - Generate a model report\n" \
                 "/removeoutliers - Identify and remove outliers, and generate reports without outliers\n" \
                 "/scatterplot - Get the scatterplot of a feature\n" \
@@ -66,23 +67,52 @@ def draw_scatterplots():
     return scatterplot_paths
 
 
-# Function to draw scatterplot of residuals
-def draw_residuals_scatterplot(feature):
-    model = regression_models[feature]
-    X = df[[feature]]
+# # Function to draw scatterplot of residuals
+# def draw_residuals_scatterplot(feature):
+#     model = regression_models[feature]
+#     X = df[[feature]]
+#     y = df['SalePrice']
+#     y_pred = model.predict(X)
+#     residuals = y - y_pred
+
+#     plt.figure()
+#     sns.scatterplot(x=y_pred, y=residuals)
+#     plt.xlabel('Predicted SalePrice')
+#     plt.ylabel('Residuals')
+#     plt.title(f'Scatterplot of Residuals ({feature})')
+
+#     # Save the scatterplot as an image file
+#     plt.savefig('residuals_plot.png', dpi=150, bbox_inches='tight')
+
+def draw_residual_plots(df):
+    X = df[['LotArea', 'OverallQual', 'YearBuilt']]
     y = df['SalePrice']
-    y_pred = model.predict(X)
-    residuals = y - y_pred
 
-    plt.figure()
-    sns.scatterplot(x=y_pred, y=residuals)
-    plt.xlabel('Predicted SalePrice')
-    plt.ylabel('Residuals')
-    plt.title(f'Scatterplot of Residuals ({feature})')
+    for feature in X.columns:
+        # Fit the linear regression model
+        lr = LinearRegression()
+        lr.fit(X[[feature]], y)
 
-    # Save the scatterplot as an image file
-    plt.savefig('residuals_plot.png', dpi=150, bbox_inches='tight')
-    
+        # Predict SalePrice using the fitted model
+        y_pred = lr.predict(X[[feature]])
+
+        # Calculate residuals
+        residuals = y - y_pred
+
+        # Draw the scatterplot of residuals
+        plt.figure()
+        plt.scatter(X[feature], residuals)
+        plt.xlabel(feature)
+        plt.ylabel('Residuals')
+        plt.title(f'{feature} vs Residuals')
+        plt.savefig(f'{feature}_residuals.png')  # Save the scatterplot as an image file
+
+    plt.close('all')  # Close all figures to free up resources
+
+
+
+
+
 # Function to generate a report for the regression model
 def generate_model_report(feature):
     model = regression_models[feature]
@@ -203,16 +233,35 @@ def send_squared_r(message):
 # Handle the /start command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Welcome to the House Price Regression Bot!")
+    bot.reply_to(message, "Welcome to the House Price Regression Bot! Use the /help command to see what I can do.")
     
-# Handle the /residuals command
-@bot.message_handler(commands=['residuals'])
-def send_residuals_scatterplot(message):
+# # Handle the /residuals command
+# @bot.message_handler(commands=['residuals'])
+# def send_residuals_scatterplot(message):
+#     try:
+#         draw_residuals_scatterplot('LotArea')
+#         bot.send_photo(message.chat.id, open('residuals_plot.png', 'rb'))
+#     except Exception as e:
+#         bot.reply_to(message, f"An error occurred: {str(e)}")
+
+
+# Handle the /residualplots command
+@bot.message_handler(commands=['residualplots'])
+def send_residual_plots(message):
     try:
-        draw_residuals_scatterplot('LotArea')
-        bot.send_photo(message.chat.id, open('residuals_plot.png', 'rb'))
+        # Assuming you have loaded your data into a DataFrame named 'df'
+        draw_residual_plots(df)
+
+        # Send the scatterplots of residuals as images
+        for filename in glob.glob('*_residuals.png'):
+            with open(filename, 'rb') as file:
+                bot.send_photo(message.chat.id, file)
+
     except Exception as e:
         bot.reply_to(message, f"An error occurred: {str(e)}")
+
+
+
         
 # Handle the /report command
 @bot.message_handler(commands=['report'])
